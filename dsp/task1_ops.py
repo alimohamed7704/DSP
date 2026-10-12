@@ -3,6 +3,12 @@ import numpy as np
 from .signal import Signal
 
 
+def _common_fs(*signals: Signal):
+    """fs shared by all signals, or None if unknown / different."""
+    rates = {s.fs for s in signals}
+    return rates.pop() if len(rates) == 1 else None
+
+
 def add_signals(*signals: Signal, name: str | None = None) -> Signal:
     """Sum any number of signals. Missing samples count as 0."""
     if not signals:
@@ -11,11 +17,13 @@ def add_signals(*signals: Signal, name: str | None = None) -> Signal:
     total = np.zeros(len(all_idx))
     for s in signals:
         total[np.searchsorted(all_idx, s.indices)] += s.values
-    return Signal(all_idx, total, name or " + ".join(s.name for s in signals))
+    return Signal(all_idx, total, name or " + ".join(s.name for s in signals),
+                  fs=_common_fs(*signals))
 
 
 def scale(signal: Signal, c: float, name: str | None = None) -> Signal:
-    return Signal(signal.indices.copy(), signal.values * c, name or f"{c:g}*{signal.name}")
+    return Signal(signal.indices.copy(), signal.values * c, name or f"{c:g}*{signal.name}",
+                  fs=signal.fs)
 
 
 def subtract(a: Signal, b: Signal, name: str | None = None) -> Signal:
@@ -25,14 +33,17 @@ def subtract(a: Signal, b: Signal, name: str | None = None) -> Signal:
 
 def delay(signal: Signal, k: int, name: str | None = None) -> Signal:
     """x(n-k): shift right by k."""
-    return Signal(signal.indices + int(k), signal.values.copy(), name or f"{signal.name}(n-{k})")
+    return Signal(signal.indices + int(k), signal.values.copy(), name or f"{signal.name}(n-{k})",
+                  fs=signal.fs)
 
 
 def advance(signal: Signal, k: int, name: str | None = None) -> Signal:
     """x(n+k): shift left by k."""
-    return Signal(signal.indices - int(k), signal.values.copy(), name or f"{signal.name}(n+{k})")
+    return Signal(signal.indices - int(k), signal.values.copy(), name or f"{signal.name}(n+{k})",
+                  fs=signal.fs)
 
 
 def fold(signal: Signal, name: str | None = None) -> Signal:
     """x(-n): reverse about n = 0."""
-    return Signal(-signal.indices, signal.values.copy(), name or f"{signal.name}(-n)")
+    return Signal(-signal.indices, signal.values.copy(), name or f"{signal.name}(-n)",
+                  fs=signal.fs)

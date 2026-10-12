@@ -5,7 +5,7 @@ from tkinter import filedialog, messagebox, ttk
 from dsp.io import read_signal, write_signal
 from dsp.signal import Signal
 from gui.generate_dialog import GenerateDialog
-from gui.plotting import DISCRETE, OVERLAY, PlotPanel
+from gui.plotting import DISCRETE, N_AXIS, OVERLAY, TIME_AXIS, PlotPanel
 from gui.task1_tab import Task1Tab
 from gui.task2_tab import Task2Tab
 
@@ -21,6 +21,7 @@ class App(tk.Tk):
         self.signals: list[Signal] = []
         self.display_mode = tk.StringVar(value=DISCRETE)   # discrete / continuous
         self.plot_layout = tk.StringVar(value=OVERLAY)     # overlay / stacked
+        self.x_axis = tk.StringVar(value=N_AXIS)           # n / time
 
         self._build_menu()
         paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
@@ -33,6 +34,15 @@ class App(tk.Tk):
         self.notebook.pack(fill=tk.X, padx=6, pady=6)
         for tab_cls in TABS:
             self.notebook.add(tab_cls(self.notebook, self), text=tab_cls.title)
+
+        # Global x-axis selector: applies to every task, since all tabs share one plot
+        axis_bar = ttk.Frame(right)
+        axis_bar.pack(fill=tk.X, padx=6)
+        ttk.Label(axis_bar, text="X axis:").pack(side=tk.LEFT)
+        for text, value in (("Sample index (n)", N_AXIS), ("Time (t = n / fs)", TIME_AXIS)):
+            ttk.Radiobutton(axis_bar, text=text, value=value, variable=self.x_axis,
+                            command=self.refresh_plot).pack(side=tk.LEFT, padx=6)
+
         self.plot_panel = PlotPanel(right)
         self.plot_panel.pack(fill=tk.BOTH, expand=True, padx=6, pady=(0, 6))
 
@@ -78,8 +88,12 @@ class App(tk.Tk):
         self.refresh_plot()
 
     def refresh_plot(self):
-        self.plot_panel.plot(self.selected_signals(),
-                             mode=self.display_mode.get(), layout=self.plot_layout.get())
+        sel = self.selected_signals()
+        if self.x_axis.get() == TIME_AXIS and any(s.fs is None for s in sel):
+            self.set_status("Time axis needs a sampling frequency for every selected "
+                            "signal (files have none) - showing n instead.")
+        self.plot_panel.plot(sel, mode=self.display_mode.get(),
+                             layout=self.plot_layout.get(), x_axis=self.x_axis.get())
 
     def set_status(self, msg: str):
         self.status.set(msg)

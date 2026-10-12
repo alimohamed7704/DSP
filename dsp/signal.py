@@ -34,10 +34,15 @@ class Signal:
     values: np.ndarray
     name: str = "signal"
     wave: Optional[WaveParams] = None   # set only for generated sine/cosine signals
+    fs: Optional[float] = None          # sampling frequency in Hz (None = unknown)
 
     def __post_init__(self):
         self.indices = np.asarray(self.indices, dtype=int)
         self.values = np.asarray(self.values, dtype=float)
+        if self.fs is None and self.wave is not None:
+            self.fs = self.wave.sampling_frequency      # generated waves already know fs
+        if self.fs is not None and self.fs <= 0:
+            raise ValueError("Sampling frequency must be > 0")
         if self.indices.shape != self.values.shape:
             raise ValueError("indices and values must have the same length")
         order = np.argsort(self.indices, kind="stable")   # keep sorted by n
@@ -46,6 +51,12 @@ class Signal:
 
     def __len__(self) -> int:
         return len(self.indices)
+
+    def time_axis(self, n=None) -> np.ndarray:
+        """Convert sample positions to seconds: t = n / fs (default: this signal's indices)."""
+        if self.fs is None:
+            raise ValueError(f"'{self.name}' has no sampling frequency")
+        return np.asarray(self.indices if n is None else n, dtype=float) / self.fs
 
     def continuous(self, points_per_sample: int = 20):
         """Return (x, y) for drawing the signal as a continuous curve.
