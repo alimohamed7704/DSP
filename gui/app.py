@@ -4,12 +4,14 @@ from tkinter import filedialog, messagebox, ttk
 
 from dsp.io import read_signal, write_signal
 from dsp.signal import Signal
-from gui.plotting import PlotPanel
-
-from gui.plotting import PlotPanel
+from gui.generate_dialog import GenerateDialog
+from gui.plotting import DISCRETE, OVERLAY, PlotPanel
 from gui.task1_tab import Task1Tab
+from gui.task2_tab import Task2Tab
 
-TABS = [Task1Tab]
+# Every task adds its tab here. Each class needs a `title` and a
+# (parent, app) constructor.
+TABS = [Task1Tab, Task2Tab]
 
 class App(tk.Tk):
     def __init__(self):
@@ -17,7 +19,10 @@ class App(tk.Tk):
         self.title("Digital Signal Processing Toolkit")
         self.geometry("1100x700")
         self.signals: list[Signal] = []
+        self.display_mode = tk.StringVar(value=DISCRETE)   # discrete / continuous
+        self.plot_layout = tk.StringVar(value=OVERLAY)     # overlay / stacked
 
+        self._build_menu()
         paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         paned.pack(fill=tk.BOTH, expand=True)
         self._build_sidebar(paned)
@@ -34,6 +39,18 @@ class App(tk.Tk):
         self.status = tk.StringVar(value="Load a signal to begin.")
         ttk.Label(self, textvariable=self.status, relief=tk.SUNKEN, anchor=tk.W).pack(
             fill=tk.X, side=tk.BOTTOM)
+
+    # ---------- menu ----------
+    def _build_menu(self):
+        menubar = tk.Menu(self, tearoff=False)
+        gen = tk.Menu(menubar, tearoff=False)
+        gen.add_command(label="Sine wave", command=lambda: self.open_generator("sine"))
+        gen.add_command(label="Cosine wave", command=lambda: self.open_generator("cosine"))
+        menubar.add_cascade(label="Signal Generation", menu=gen)
+        self.config(menu=menubar)
+
+    def open_generator(self, kind: str):
+        GenerateDialog(self, kind)
 
     # ---------- sidebar ----------
     def _build_sidebar(self, paned):
@@ -61,7 +78,8 @@ class App(tk.Tk):
         self.refresh_plot()
 
     def refresh_plot(self):
-        self.plot_panel.plot(self.selected_signals())
+        self.plot_panel.plot(self.selected_signals(),
+                             mode=self.display_mode.get(), layout=self.plot_layout.get())
 
     def set_status(self, msg: str):
         self.status.set(msg)
