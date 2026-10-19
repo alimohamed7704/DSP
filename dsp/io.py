@@ -31,3 +31,9 @@ def write_signal(signal: Signal, path) -> None:
     out = [str(len(signal))]
     out += [f"{i} {v:g}" for i, v in zip(signal.indices, signal.values)]
     Path(path).write_text("\n".join(out) + "\n")
+
+def write_encoded(indices, codes, path) -> None:
+    """Save an encoded signal: first row N, then 'index code' per sample."""
+    out = [str(len(codes))]
+    out += [f"{int(i)} {c}" for i, c in zip(indices, codes)]
+    Path(path).write_text("\n".join(out) + "\n")    
