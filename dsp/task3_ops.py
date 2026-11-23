@@ -64,15 +64,15 @@ def quantize(signal: Signal, levels: int | None = None, bits: int | None = None
 
     x = signal.values
     lo, hi = float(x.min()), float(x.max())
-    step = (hi - lo) / levels                       #get delta
+    step = (hi - lo) / levels
 
     if step == 0:                                   # constant signal: nothing to resolve
         idx = np.zeros(len(x), dtype=int)
     else:
-        idx = np.clip(np.floor((x - lo) / step).astype(int), 0, levels - 1) #decide where each old value belong to which interval(level)
+        idx = np.clip(np.floor((x - lo) / step).astype(int), 0, levels - 1)
 
-    level_values = lo + (np.arange(levels) + 0.5) * step  #midpoints (levels values)
-    xq = level_values[idx] #map each level to its value
+    level_values = lo + (np.arange(levels) + 0.5) * step
+    xq = level_values[idx]
 
     quantized = Signal(signal.indices.copy(), xq, f"{signal.name}_quantized", fs=signal.fs)
     error = Signal(signal.indices.copy(), xq - x, f"{signal.name}_error", fs=signal.fs)

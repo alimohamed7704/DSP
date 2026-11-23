@@ -9,10 +9,11 @@ from gui.plotting import DISCRETE, N_AXIS, OVERLAY, TIME_AXIS, PlotPanel
 from gui.task1_tab import Task1Tab
 from gui.task2_tab import Task2Tab
 from gui.task3_tab import Task3Tab
+from gui.task5_tab import Task5Tab
 
 # Every task adds its tab here. Each class needs a `title` and a
 # (parent, app) constructor.
-TABS = [Task1Tab, Task2Tab, Task3Tab]
+TABS = [Task1Tab, Task2Tab, Task3Tab, Task5Tab]
 
 class App(tk.Tk):
     def __init__(self):

@@ -1,3 +1,18 @@
+"""Task 5: moving average, sharpening (derivatives) and convolution (no GUI code here).
+
+Conventions (every output keeps the sample indices of the input, nothing is padded):
+
+    moving average   y(n)  = (1/M) * [x(n) + x(n+1) + ... + x(n+M-1)]
+                     defined only where all M samples exist -> N - M + 1 outputs,
+                     y(n) is stored at the index of the FIRST sample in its window.
+    1st derivative   y(n)  = x(n) - x(n-1)                    -> N - 1 outputs
+    2nd derivative   y(n)  = x(n+1) - 2x(n) + x(n-1)          -> N - 2 outputs
+    convolution      y(n)  = sum_k a(k) * b(n-k)
+                     first index = a.first + b.first          -> Na + Nb - 1 outputs
+
+Samples that are missing between a signal's first and last index count as 0, the
+same rule Task 1 uses when it adds signals.
+"""
 from __future__ import annotations
 
 import numpy as np
@@ -23,6 +38,7 @@ def _common_fs(*signals: Signal):
 
 # ---------- 1) moving average ----------
 def moving_average(signal: Signal, window: int, name: str | None = None) -> Signal:
+    """Average of every `window` consecutive samples (window = M points)."""
     if window != int(window) or window < 1:
         raise ValueError("Window size must be a whole number of at least 1.")
     window = int(window)
