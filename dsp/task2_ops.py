@@ -41,6 +41,7 @@ def generate_wave(kind: str, amplitude: float, frequency: float,
         raise ValueError("Duration must be > 0 seconds.")
     check_sampling_theorem(frequency, sampling_frequency)
 
+    # creating samples
     n_samples = int(round(duration * sampling_frequency))
     if n_samples < 2:
         raise ValueError("Duration is too short: the signal would have fewer than 2 samples.")
@@ -49,6 +50,8 @@ def generate_wave(kind: str, amplitude: float, frequency: float,
             f"Too many samples ({n_samples}). Reduce the duration or the sampling "
             f"frequency (maximum is {MAX_SAMPLES} samples).")
 
+
+    # creating wave obj
     wave = WaveParams(kind, float(amplitude), float(frequency),
                       float(sampling_frequency), float(phase))
     n = np.arange(n_samples)
